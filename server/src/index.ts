@@ -1,8 +1,10 @@
+import { Post } from './entities/Post';
 require("dotenv").config();
 
 import "reflect-metadata";
 import express from "express";
 import { createConnection } from "typeorm";
+import { User } from "./entities/User";
 
 const main = async () => {
   await createConnection({
@@ -12,6 +14,7 @@ const main = async () => {
     password: process.env.POSTGRES_PASSWORD_DEV,
     logging: true,
     synchronize: true,
+    entities: [User, Post]
   });
   const app = express();
 
