@@ -1,16 +1,18 @@
 import { User } from "./../entities/User";
-import { Arg, Field, Mutation, Resolver } from "type-graphql";
+import { Arg, Mutation, Resolver } from "type-graphql";
 import argon2 from "argon2";
 import { UserMutationResponse } from "../types/UserMutationResponse";
+import { RegisterInput } from "../types/RegisterInput";
 
 @Resolver()
 export class UserResolver {
   @Mutation((_returns) => UserMutationResponse, { nullable: true })
   async register(
-    @Arg("email") email: string,
-    @Arg("username") username: string,
-    @Arg("password") password: string
+    @Arg("registerInput") registerInput: RegisterInput
   ): Promise<UserMutationResponse> {
+
+    const { username, password, email } = registerInput;
+
     try {
       const existingUser = await User.findOne({
         where: [{ username }, { email }],
@@ -19,7 +21,7 @@ export class UserResolver {
         return {
           code: 400,
           success: false,
-          message: 'Duplicated username or email',
+          message: "Duplicated username or email",
           errors: [
             {
               field: existingUser.username === username ? "username" : "email",
