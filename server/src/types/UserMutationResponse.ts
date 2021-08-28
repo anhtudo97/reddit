@@ -2,7 +2,7 @@
 import { Field, ObjectType } from 'type-graphql'
 
 import { FieldError } from './FieldError';
-import { User } from 'src/entities/User'
+import { User } from '../entities/User'
 import { IMutationResponse } from './MutationResponse'
 
 @ObjectType({ implements: IMutationResponse })

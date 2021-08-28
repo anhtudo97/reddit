@@ -1,21 +1,34 @@
 import { User } from "./../entities/User";
-import { Arg, Mutation, Resolver } from "type-graphql";
+import { Arg, Field, Mutation, Resolver } from "type-graphql";
 import argon2 from "argon2";
+import { UserMutationResponse } from "../types/UserMutationResponse";
 
 @Resolver()
 export class UserResolver {
-  @Mutation((_returns) => User, { nullable: true })
+  @Mutation((_returns) => UserMutationResponse, { nullable: true })
   async register(
     @Arg("email") email: string,
     @Arg("username") username: string,
     @Arg("password") password: string
-  ): Promise<User | null> {
+  ): Promise<UserMutationResponse> {
     try {
       const existingUser = await User.findOne({
-        where: [{ email }, { username }],
+        where: [{ username }, { email }],
       });
       if (existingUser) {
-        return null;
+        return {
+          code: 400,
+          success: false,
+          message: 'Duplicated username or email',
+          errors: [
+            {
+              field: existingUser.username === username ? "username" : "email",
+              message: `${
+                existingUser.username === username ? "Username" : "Email"
+              } already taken`,
+            },
+          ],
+        };
       }
 
       const hashPassword = await argon2.hash(password);
@@ -26,10 +39,20 @@ export class UserResolver {
         email,
       });
 
-      return await User.save(newUser);
+      const createdUser = await User.save(newUser);
+
+      return {
+        code: 200,
+        success: true,
+        message: "User regiteration successful",
+        user: createdUser,
+      };
     } catch (error) {
-      console.log(error);
-      return null;
+      return {
+        code: 500,
+        success: false,
+        message: `Internal Server Error ${error.message}`,
+      };
     }
   }
 }
