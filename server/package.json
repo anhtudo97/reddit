@@ -15,7 +15,8 @@
     },
     "devDependencies": {
         "@types/express": "^4.17.13",
-        "@types/node": "^16.7.2",
+        "@types/express-session": "^1.17.4",
+        "@types/node": "^15.14.2",
         "apollo-server-core": "^3.3.0",
         "argon2": "^0.28.2",
         "nodemon": "^2.0.12",
@@ -26,9 +27,12 @@
     "dependencies": {
         "apollo-server-express": "^3.3.0",
         "class-validator": "^0.13.1",
+        "connect-mongo": "^4.5.0",
         "dotenv": "^10.0.0",
         "express": "^4.17.1",
+        "express-session": "^1.17.2",
         "graphql": "^15.5.1",
+        "mongoose": "^6.0.2",
         "pg": "^8.7.1",
         "reflect-metadata": "^0.1.13",
         "type-graphql": "^1.1.1"

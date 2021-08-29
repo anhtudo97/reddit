@@ -14,3 +14,21 @@ services:
       - "5432:5432"
 
     restart: unless-stopped
+
+  mongodb_cache:
+    image: mongo:latest
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: 123
+    #   MONGO_INITDB_DATABASE: reddit
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - mongodb_data_container:/data/blog
+
+    restart: unless-stopped
+
+volumes:
+  mongodb_data_container:

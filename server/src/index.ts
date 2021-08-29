@@ -10,6 +10,11 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
+import mongoose from "mongoose";
+import MongoStore from 'connect-mongo'
+import session from 'express-session'
+import { COOKIE_NAME, __prod__ } from './constant';
+import { Context } from './types/Context';
 
 const main = async () => {
   await createConnection({
@@ -23,6 +28,14 @@ const main = async () => {
   });
   const app = express();
 
+  // Session/Cookie store
+	const mongoUrl = `${process.env.MONGO_URL}`;
+
+	await mongoose.connect(mongoUrl,  {
+    dbName: 'reddit',
+    autoIndex: true,
+  });
+
   // Apollo server
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
@@ -30,7 +43,30 @@ const main = async () => {
       validate: false,
     }),
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground],
+    context: ({ req, res }): Context => ({
+			req,
+			res,
+		}),
   });
+
+  console.log("Mongo db connected")
+
+  // Setting session mongo
+  app.use(
+		session({
+			name: COOKIE_NAME,
+			store: MongoStore.create({ mongoUrl }),
+			cookie: {
+				maxAge: 1000 * 60 * 60, // one hour
+				httpOnly: true, // JS front end cannot access the cookie
+				secure: __prod__, // cookie only works in https
+				sameSite: 'none'
+			},
+			secret: process.env.SESSION_SECRET_DEV_PROD as string,
+			saveUninitialized: false, // don't save empty sessions, right from the start
+			resave: false
+		})
+	)
 
   await apolloServer.start();
 
