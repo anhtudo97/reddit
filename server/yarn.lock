@@ -217,6 +217,14 @@
   dependencies:
     "@types/node" "*"
 
+"@types/cookie-session@^2.0.43":
+  version "2.0.43"
+  resolved "https://registry.yarnpkg.com/@types/cookie-session/-/cookie-session-2.0.43.tgz#dc6dda1aa2881352c27e8d048982c787aeb3a50e"
+  integrity sha512-u5tPaGFbqkQagaY/xlGZA6VC/QXGxYE42p1/yQHEY3fOHoaAcNnPVe+kNRiiC2VqY5WfTjpu7Fg2U0zxKhKH+w==
+  dependencies:
+    "@types/express" "*"
+    "@types/keygrip" "*"
+
 "@types/cors@2.8.12":
   version "2.8.12"
   resolved "https://registry.yarnpkg.com/@types/cors/-/cors-2.8.12.tgz#6b2c510a7ad7039e98e7b8d3d6598f4359e5c080"
@@ -255,6 +263,11 @@
   dependencies:
     "@types/minimatch" "*"
     "@types/node" "*"
+
+"@types/keygrip@*":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@types/keygrip/-/keygrip-1.0.2.tgz#513abfd256d7ad0bf1ee1873606317b33b1b2a72"
+  integrity sha512-GJhpTepz2udxGexqos8wgaBx4I/zWIDPh/KOGEwAqtuGDkOUJu5eFvwmdBX4AmB8Odsr+9pHCQqiAqDL/yKMKw==
 
 "@types/long@^4.0.0":
   version "4.0.1"

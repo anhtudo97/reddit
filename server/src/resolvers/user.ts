@@ -65,12 +65,11 @@ export class UserResolver {
     }
   }
 
-  @Mutation((_returns) => UserMutationResponse)
+  @Mutation((_return) => UserMutationResponse)
   async login(
-    @Arg("loginInput") loginInput: LoginInput,
+    @Arg("loginInput") { usernameOrEmail, password }: LoginInput,
     @Ctx() { req }: Context
   ): Promise<UserMutationResponse> {
-    const { usernameOrEmail, password } = loginInput;
     try {
       const existingUser = await User.findOne(
         usernameOrEmail.includes("@")
@@ -78,38 +77,31 @@ export class UserResolver {
           : { username: usernameOrEmail }
       );
 
-      if (!existingUser) {
+      if (!existingUser)
         return {
           code: 400,
           success: false,
-          message: "User is not existing",
+          message: "User not found",
           errors: [
             {
               field: "usernameOrEmail",
-              message: "Username or email is incorrect",
+              message: "Username or email incorrect",
             },
           ],
         };
-      }
 
       const passwordValid = await argon2.verify(
         existingUser.password,
         password
       );
 
-      if (!passwordValid) {
+      if (!passwordValid)
         return {
           code: 400,
           success: false,
           message: "Wrong password",
-          errors: [
-            {
-              field: "password",
-              message: "Wrong password",
-            },
-          ],
+          errors: [{ field: "password", message: "Wrong password" }],
         };
-      }
 
       // Create session and return cookie
       req.session.userId = existingUser.id;
@@ -121,10 +113,11 @@ export class UserResolver {
         user: existingUser,
       };
     } catch (error) {
+      console.log(error);
       return {
         code: 500,
         success: false,
-        message: `Internal Server Error ${error.message}`,
+        message: `Internal server error ${error.message}`,
       };
     }
   }
