@@ -3,18 +3,22 @@ import "reflect-metadata";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { HelloResolver } from "./resolvers/hello";
-import { UserResolver } from "./resolvers/user";
 import mongoose from "mongoose";
 import MongoStore from "connect-mongo";
 import session from "express-session";
-import { COOKIE_NAME, __prod__ } from "./constants";
-import { Context } from "./types/Context";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import { createConnection } from "typeorm";
+import cors from "cors";
+
+import { Context } from "./types/Context";
+import { COOKIE_NAME, __prod__ } from "./constants";
+
 import { User } from "./entities/User";
 import { Post } from "./entities/Post";
-import cors from "cors";
+
+import { HelloResolver } from "./resolvers/hello";
+import { UserResolver } from "./resolvers/user";
+import { PostResolver } from "./resolvers/post";
 
 const main = async () => {
   await createConnection({
@@ -64,7 +68,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver],
+      resolvers: [HelloResolver, UserResolver, PostResolver],
       validate: false,
     }),
     context: ({ req, res }): Context => ({

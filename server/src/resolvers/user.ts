@@ -50,7 +50,7 @@ export class UserResolver {
         email,
       });
 
-      const createdUser = await User.save(newUser);
+      await User.save(newUser);
 
       // Create session and return cookie
       req.session.userId = newUser.id;
@@ -59,7 +59,7 @@ export class UserResolver {
         code: 200,
         success: true,
         message: "User regiteration successful",
-        user: createdUser,
+        user: newUser,
       };
     } catch (error) {
       return {
@@ -70,7 +70,7 @@ export class UserResolver {
     }
   }
 
-  @Mutation((_return) => UserMutationResponse)
+  @Mutation((_returns) => UserMutationResponse)
   async login(
     @Arg("loginInput") { usernameOrEmail, password }: LoginInput,
     @Ctx() { req }: Context
