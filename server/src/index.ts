@@ -16,8 +16,6 @@ import { User } from "./entities/User";
 import { Post } from "./entities/Post";
 import cors from "cors";
 
-const allowedOrigins = ["http://localhost:4000"];
-
 const main = async () => {
   await createConnection({
     type: "postgres",
@@ -29,47 +27,34 @@ const main = async () => {
     entities: [User, Post],
   });
 
-  const corsOptions: cors.CorsOptions = {
-    origin: allowedOrigins,
-  };
-
   const app = express();
-  app.use(cors(corsOptions));
-  app.set("trust proxy", 1);
+
+  app.use(
+    cors({
+      origin: __prod__
+        ? process.env.CORS_ORIGIN_PROD
+        : process.env.CORS_ORIGIN_DEV,
+      credentials: true,
+    })
+  );
 
   // Session/Cookie store
   const mongoUrl = `${process.env.MONGO_URL}`;
+  await mongoose.connect(mongoUrl);
 
-  await mongoose.connect(mongoUrl, {
-    dbName: "reddit",
-    autoIndex: true,
-  });
+  console.log("MongoDB Connected");
 
-  // Apollo server
-  const apolloServer = new ApolloServer({
-    schema: await buildSchema({
-      resolvers: [HelloResolver, UserResolver],
-      validate: false,
-    }),
-    context: ({ req, res }): Context => ({ req, res }),
-    plugins: [ApolloServerPluginLandingPageGraphQLPlayground],
-  });
-
-  console.log("Mongo db connected");
+  app.set("trust proxy", 1);
 
   app.use(
     session({
       name: COOKIE_NAME,
-      store: MongoStore.create({
-        mongoUrl,
-        crypto: {
-          secret: "squirrel",
-        },
-      }),
+      store: MongoStore.create({ mongoUrl }),
       cookie: {
         maxAge: 1000 * 60 * 60, // one hour
+        httpOnly: true, // JS front end cannot access the cookie
         secure: __prod__, // cookie only works in https
-        // sameSite: "none",
+        sameSite: "lax",
       },
       secret: process.env.SESSION_SECRET_DEV_PROD as string,
       saveUninitialized: false, // don't save empty sessions, right from the start
@@ -77,21 +62,33 @@ const main = async () => {
     })
   );
 
+  const apolloServer = new ApolloServer({
+    schema: await buildSchema({
+      resolvers: [HelloResolver, UserResolver],
+      validate: false,
+    }),
+    context: ({ req, res }): Context => ({
+      req,
+      res,
+    }),
+    plugins: [
+      ApolloServerPluginLandingPageGraphQLPlayground({
+        settings: {
+          // setting for access cookie
+          ["request.credentials"]: "same-origin",
+        },
+      }),
+    ],
+  });
+
   await apolloServer.start();
 
-  apolloServer.applyMiddleware({ app, path: "/", cors: false });
-
-  app.get("/set_session", (req: any, res) => {
-    console.log(req.session);
-    req.session.tuanh = "789";
-
-    res.send("OK");
-  });
+  apolloServer.applyMiddleware({ app, cors: false });
 
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () =>
     console.log(
-      `Server is started on port ${PORT}. GraphQL Server started on localhost:${PORT}${apolloServer.graphqlPath}`
+      `Server started on port ${PORT}. GraphQL server started on localhost:${PORT}${apolloServer.graphqlPath}`
     )
   );
 };

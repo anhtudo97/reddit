@@ -11,7 +11,8 @@ import { Context } from "../types/Context";
 export class UserResolver {
   @Mutation((_returns) => UserMutationResponse, { nullable: true })
   async register(
-    @Arg("registerInput") registerInput: RegisterInput
+    @Arg("registerInput") registerInput: RegisterInput,
+    @Ctx() { req }: Context
   ): Promise<UserMutationResponse> {
     const validateRegisterInputErrors = validateRegisterInput(registerInput);
 
@@ -49,6 +50,9 @@ export class UserResolver {
       });
 
       const createdUser = await User.save(newUser);
+
+      // Create session and return cookie
+      req.session.userId = newUser.id;
 
       return {
         code: 200,
