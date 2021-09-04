@@ -1,11 +1,15 @@
+import { CheckAuth } from './../middleware/checkAuth';
+import { Context } from "./../types/Context";
+import { UpdatePostInput } from "./../types/UpdatePostInput";
+import { PostMutationResponse } from "./../types/PostMutationResponse";
 import { CreatePostInput } from "../types/CreatePostInput";
 import { Post } from "./../entities/Post";
-import { PostMutationResponse } from "../types/PostMutationResponse";
-import { Arg, ID, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, Ctx, ID, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
 
 @Resolver()
 export class PostResolver {
   @Mutation((_returns) => PostMutationResponse)
+  @UseMiddleware(CheckAuth)
   async createPost(
     @Arg("createPostInput") { title, text }: CreatePostInput
   ): Promise<PostMutationResponse> {
@@ -33,11 +37,13 @@ export class PostResolver {
   }
 
   @Query((_returns) => [Post])
+  @UseMiddleware(CheckAuth)
   async posts(): Promise<Post[]> {
     return Post.find();
   }
 
   @Query((_returns) => Post, { nullable: true })
+  @UseMiddleware(CheckAuth)
   async post(@Arg("id", (_type) => ID) id: number): Promise<Post | undefined> {
     try {
       const post = await Post.findOne(id);
@@ -45,5 +51,61 @@ export class PostResolver {
     } catch (error) {
       return undefined;
     }
+  }
+
+  @Mutation((_return) => PostMutationResponse)
+  @UseMiddleware(CheckAuth)
+  async updatePost(
+    @Arg("updatePostInput") { id, title, text }: UpdatePostInput
+  ): Promise<PostMutationResponse> {
+    const existingPost = await Post.findOne(id);
+    if (!existingPost) {
+      return {
+        code: 400,
+        success: false,
+        message: "Post not found",
+      };
+    }
+
+    existingPost.title = title;
+    existingPost.text = text;
+
+    existingPost.save();
+
+    return {
+      code: 200,
+      success: true,
+      message: "Post updated successfully",
+      post: existingPost,
+    };
+  }
+
+  @Mutation((_return) => PostMutationResponse)
+  @UseMiddleware(CheckAuth)
+  async deletePost(
+    @Arg("id", (_type) => ID) id: number,
+    @Ctx() { req }: Context
+  ): Promise<PostMutationResponse> {
+    console.log("REQ", req.session);
+    const existingPost = await Post.findOne(id);
+    if (!existingPost) {
+      return {
+        code: 400,
+        success: false,
+        message: "Post not found",
+      };
+    }
+
+    // if (existingPost.userId !== req.session.userId) {
+    // 	return { code: 401, success: false, message: 'Unauthorised' }
+    // }
+
+    await Post.delete({ id });
+
+    return {
+      code: 200,
+      success: true,
+      message: "Post deleted successfully",
+    };
   }
 }
