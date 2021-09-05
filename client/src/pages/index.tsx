@@ -1,4 +1,4 @@
-import Register from "./regiter";
+import Register from "./register";
 
 const Index = () => <Register />;
 
