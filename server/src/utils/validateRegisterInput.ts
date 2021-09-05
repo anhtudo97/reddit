@@ -26,7 +26,7 @@ export const validateRegisterInput = (registerInput: RegisterInput) => {
   if (format.test(username)) {
     return {
       message: "Invalid username",
-      errors: [{ field: "email", message: "Username cannot include special characters" }],
+      errors: [{ field: "username", message: "Username cannot include special characters" }],
     };
   }
 
