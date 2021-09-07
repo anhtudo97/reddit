@@ -5,8 +5,10 @@ import { Wapper } from "../components/Wrapper";
 import { InputField } from "../components/InputField";
 import { RegisterInput, useRegisterMutation } from "../generated/graphql";
 import { mapFieldErrors } from "../helpers/mapFieldErrors";
+import { useRouter } from "next/dist/client/router";
 
 const Register = () => {
+  const router = useRouter()
   const initialValues: RegisterInput = {
     username: "",
     email: "",
@@ -28,6 +30,8 @@ const Register = () => {
 
     if (response.data?.register?.errors) {
       setErrors(mapFieldErrors(response.data.register.errors));
+    }else{
+      router.push('/')
     }
   };
 
