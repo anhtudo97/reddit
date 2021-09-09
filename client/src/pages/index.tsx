@@ -1,5 +1,10 @@
+import { Navbar } from "../components/Navbar";
 import Register from "./register";
 
-const Index = () => <h1>tuanh</h1>;
+const Index = () => (
+  <div>
+    <Navbar />
+  </div>
+);
 
 export default Index;

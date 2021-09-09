@@ -3,7 +3,12 @@ import { Formik, Form, FormikHelpers } from "formik";
 import { Button, Box } from "@chakra-ui/react";
 import { Wapper } from "../components/Wrapper";
 import { InputField } from "../components/InputField";
-import { LoginInput, useLoginMutation } from "../generated/graphql";
+import {
+  LoginInput,
+  MeDocument,
+  MeQuery,
+  useLoginMutation,
+} from "../generated/graphql";
 import { mapFieldErrors } from "../helpers/mapFieldErrors";
 import { useRouter } from "next/dist/client/router";
 
@@ -20,6 +25,15 @@ const Login = () => {
     const response = await loginUser({
       variables: {
         loginInput: values,
+      },
+      update(cache, { data }) {
+        if (data?.login.success) {
+          // query to apollo cache
+          cache.writeQuery<MeQuery>({
+            query: MeDocument,
+            data: { me: data.login.user },
+          });
+        }
       },
     });
 

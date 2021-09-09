@@ -3,12 +3,17 @@ import { Formik, Form, FormikHelpers } from "formik";
 import { Button, Box } from "@chakra-ui/react";
 import { Wapper } from "../components/Wrapper";
 import { InputField } from "../components/InputField";
-import { RegisterInput, useRegisterMutation } from "../generated/graphql";
+import {
+  MeDocument,
+  MeQuery,
+  RegisterInput,
+  useRegisterMutation,
+} from "../generated/graphql";
 import { mapFieldErrors } from "../helpers/mapFieldErrors";
 import { useRouter } from "next/dist/client/router";
 
 const Register = () => {
-  const router = useRouter()
+  const router = useRouter();
   const initialValues: RegisterInput = {
     username: "",
     email: "",
@@ -26,12 +31,20 @@ const Register = () => {
       variables: {
         registerInput: values,
       },
+      update(cache, { data }) {
+        if (data?.register?.success) {
+          cache.writeQuery<MeQuery>({
+            query: MeDocument,
+            data: { me: data.register.user },
+          });
+        }
+      },
     });
 
     if (response.data?.register?.errors) {
       setErrors(mapFieldErrors(response.data.register.errors));
-    }else{
-      router.push('/')
+    } else {
+      router.push("/");
     }
   };
 
