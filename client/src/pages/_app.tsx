@@ -3,7 +3,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 import theme from "../theme";
 import { AppProps } from "next/app";
 
-import { ApolloProvider, ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client";
 import { useApollo } from "../lib/apolloClient";
 
 function MyApp({ Component, pageProps }: AppProps) {

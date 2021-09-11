@@ -1,15 +1,15 @@
-import { CheckAuth } from './../middleware/checkAuth';
+// import { CheckAuth } from './../middleware/checkAuth';
 import { Context } from "./../types/Context";
 import { UpdatePostInput } from "./../types/UpdatePostInput";
 import { PostMutationResponse } from "./../types/PostMutationResponse";
 import { CreatePostInput } from "../types/CreatePostInput";
 import { Post } from "./../entities/Post";
-import { Arg, Ctx, ID, Mutation, Query, Resolver, UseMiddleware } from "type-graphql";
+import { Arg, Ctx, ID, Mutation, Query, Resolver } from "type-graphql";
 
 @Resolver()
 export class PostResolver {
   @Mutation((_returns) => PostMutationResponse)
-  @UseMiddleware(CheckAuth)
+  // @UseMiddleware(CheckAuth)
   async createPost(
     @Arg("createPostInput") { title, text }: CreatePostInput
   ): Promise<PostMutationResponse> {
@@ -37,13 +37,13 @@ export class PostResolver {
   }
 
   @Query((_returns) => [Post])
-  @UseMiddleware(CheckAuth)
+  // @UseMiddleware(CheckAuth)
   async posts(): Promise<Post[]> {
     return Post.find();
   }
 
   @Query((_returns) => Post, { nullable: true })
-  @UseMiddleware(CheckAuth)
+  // @UseMiddleware(CheckAuth)
   async post(@Arg("id", (_type) => ID) id: number): Promise<Post | undefined> {
     try {
       const post = await Post.findOne(id);
@@ -54,7 +54,7 @@ export class PostResolver {
   }
 
   @Mutation((_return) => PostMutationResponse)
-  @UseMiddleware(CheckAuth)
+  // @UseMiddleware(CheckAuth)
   async updatePost(
     @Arg("updatePostInput") { id, title, text }: UpdatePostInput
   ): Promise<PostMutationResponse> {
@@ -81,7 +81,7 @@ export class PostResolver {
   }
 
   @Mutation((_return) => PostMutationResponse)
-  @UseMiddleware(CheckAuth)
+  // @UseMiddleware(CheckAuth)
   async deletePost(
     @Arg("id", (_type) => ID) id: number,
     @Ctx() { req }: Context
