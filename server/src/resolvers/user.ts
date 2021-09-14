@@ -1,3 +1,5 @@
+import { sendEmail } from "./../utils/sendEmail";
+import { ForgotPasswordInput } from "./../types/ForgotPasswordInput";
 import argon2 from "argon2";
 import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
 import { User } from "./../entities/User";
@@ -146,5 +148,22 @@ export class UserResolver {
         resolve(true);
       });
     });
+  }
+
+  @Mutation((_returns) => Boolean)
+  async forgotPassword(
+    @Arg("forgotPasswordInput") forgotPasswordInput: ForgotPasswordInput
+  ): Promise<boolean> {
+    const user = await User.findOne({ email: forgotPasswordInput.email });
+
+    if (!user) return true;
+
+    // send reset password link to user via email
+    await sendEmail(
+      forgotPasswordInput.email,
+      `<a href="http://localhost:3000/change-password?userId=${user.id}">Click here to reset your password</a>`
+    );
+
+    return true;
   }
 }
