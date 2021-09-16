@@ -9,6 +9,8 @@ import { RegisterInput } from "../types/RegisterInput";
 import { UserMutationResponse } from "../types/UserMutationResponse";
 import { Context } from "../types/Context";
 import { COOKIE_NAME } from "../constants";
+import { v4 as uuidv4 } from "uuid";
+import { TokenModel } from "../models/Token";
 
 @Resolver()
 export class UserResolver {
@@ -158,10 +160,22 @@ export class UserResolver {
 
     if (!user) return true;
 
+    await TokenModel.findOneAndDelete({ userId: `${user.id}` });
+
+    const resetToken = uuidv4();
+    console.log(resetToken)
+    const hashedResetToken = await argon2.hash(resetToken);
+
+    // save token to db
+    await new TokenModel({
+      userId: `${user.id}`,
+      token: hashedResetToken,
+    }).save();
+
     // send reset password link to user via email
     await sendEmail(
       forgotPasswordInput.email,
-      `<a href="http://localhost:3000/change-password?userId=${user.id}">Click here to reset your password</a>`
+      `<a href="http://localhost:3000/change-password?token=${resetToken}&userId=${user.id}">Click here to reset your password</a>`
     );
 
     return true;
