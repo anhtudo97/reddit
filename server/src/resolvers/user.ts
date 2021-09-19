@@ -11,6 +11,7 @@ import { Context } from "../types/Context";
 import { COOKIE_NAME } from "../constants";
 import { v4 as uuidv4 } from "uuid";
 import { TokenModel } from "../models/Token";
+import { ChangePasswordInput } from "../types/ChangePasswordInput";
 
 @Resolver()
 export class UserResolver {
@@ -163,7 +164,7 @@ export class UserResolver {
     await TokenModel.findOneAndDelete({ userId: `${user.id}` });
 
     const resetToken = uuidv4();
-    console.log(resetToken)
+    console.log(resetToken);
     const hashedResetToken = await argon2.hash(resetToken);
 
     // save token to db
@@ -179,5 +180,93 @@ export class UserResolver {
     );
 
     return true;
+  }
+
+  @Mutation((_returns) => UserMutationResponse)
+  async changePassword(
+    @Arg("token") token: string,
+    @Arg("userId") userId: string,
+    @Arg("changePasswordInput") changePasswordInput: ChangePasswordInput,
+    @Ctx() { req }: Context
+  ): Promise<UserMutationResponse> {
+    if (changePasswordInput.newPassword.length <= 2) {
+      return {
+        code: 400,
+        success: false,
+        message: "Invalid password",
+        errors: [
+          { field: "newPassword", message: "Length must be greater than 2" },
+        ],
+      };
+    }
+    try {
+      const resetPasswordTokenRecord = await TokenModel.findOne({ userId });
+      if (!resetPasswordTokenRecord) {
+        return {
+          code: 400,
+          success: false,
+          message: "Invalid or expired password reset token",
+          errors: [
+            {
+              field: "token",
+              message: "Invalid or expired password reset token",
+            },
+          ],
+        };
+      }
+
+      const resetPasswordTokenValid = await argon2.verify(
+        resetPasswordTokenRecord.token,
+        token
+      );
+
+      if (!resetPasswordTokenValid) {
+        return {
+          code: 400,
+          success: false,
+          message: "Invalid or expired password reset token",
+          errors: [
+            {
+              field: "token",
+              message: "Invalid or expired password reset token",
+            },
+          ],
+        };
+      }
+
+      const userIdNum = parseInt(userId);
+      const user = await User.findOne(userIdNum);
+
+      if (!user) {
+        return {
+          code: 400,
+          success: false,
+          message: "User no longer exists",
+          errors: [{ field: "token", message: "User no longer exists" }],
+        };
+      }
+
+      const updatedPassword = await argon2.hash(
+        changePasswordInput.newPassword
+      );
+      await User.update({ id: userIdNum }, { password: updatedPassword });
+
+      await resetPasswordTokenRecord.deleteOne();
+
+      req.session.userId = user.id;
+
+      return {
+        code: 200,
+        success: true,
+        message: "User password reset successfully",
+        user,
+      };
+    } catch (error) {
+      return {
+        code: 500,
+        success: false,
+        message: `Internal server error ${error.message}`,
+      };
+    }
   }
 }
