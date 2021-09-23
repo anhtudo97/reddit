@@ -52,7 +52,7 @@ function createApolloClient(headers: IncomingHttpHeaders | null = null) {
       process.env.NODE_ENV === "production"
         ? "https://sleepy-castle-81019.herokuapp.com/graphql"
         : "http://localhost:4000/graphql",
-    credentials: "same-origin", // Additional fetch() options like `credentials` or `headers`
+    credentials: "include", // Additional fetch() options like `credentials` or `headers`
     fetch: enhancedFetch,
   });
 
@@ -87,6 +87,7 @@ function createApolloClient(headers: IncomingHttpHeaders | null = null) {
         },
       },
     }),
+    credentials: "include",
   });
 }
 
