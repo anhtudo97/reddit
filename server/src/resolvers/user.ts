@@ -164,7 +164,7 @@ export class UserResolver {
     await TokenModel.findOneAndDelete({ userId: `${user.id}` });
 
     const resetToken = uuidv4();
-    console.log(resetToken);
+    
     const hashedResetToken = await argon2.hash(resetToken);
 
     // save token to db
