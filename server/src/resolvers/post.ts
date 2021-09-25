@@ -1,3 +1,5 @@
+import { User } from './../entities/User';
+
 // import { CheckAuth } from './../middleware/checkAuth';
 import { Context } from "./../types/Context";
 import { UpdatePostInput } from "./../types/UpdatePostInput";
@@ -22,15 +24,22 @@ export class PostResolver {
     return root.text.slice(0, 50);
   }
 
+  @FieldResolver((_returns) => User)
+  async user(@Root() root: Post) {
+    return await User.findOne(root.userId);
+  }
+
   @Mutation((_returns) => PostMutationResponse)
   // @UseMiddleware(CheckAuth)
   async createPost(
-    @Arg("createPostInput") { title, text }: CreatePostInput
+    @Arg("createPostInput") { title, text }: CreatePostInput,
+    @Ctx() { req }: Context
   ): Promise<PostMutationResponse> {
     try {
       const newPost = Post.create({
         title,
         text,
+        userId: req.session.userId,
       });
 
       await newPost.save();

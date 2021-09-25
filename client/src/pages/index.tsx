@@ -39,7 +39,7 @@ const Index = () => {
                       <Heading fontSize="xl">{post.title}</Heading>
                     </Link>
                   </NextLink>
-                  <Text>Posted by User</Text>
+                  <Text>Posted by {post.user.username}</Text>
                   <Flex align="center">
                     <Text mt={4}>{post.textSnippet}</Text>
                     <Button>Edit button</Button>
@@ -59,13 +59,13 @@ export const getServerSideProps: GetServerSideProps = async (
 ) => {
   const apolloClient = initializeApollo({ headers: context.req.headers });
 
-  const res = await apolloClient.query({
+  await apolloClient.query({
     query: PostsDocument,
     variables: {
       limit,
     },
   });
-  
+
   return addApolloState(apolloClient, {
     props: {},
   });
