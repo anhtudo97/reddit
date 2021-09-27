@@ -1,4 +1,4 @@
-import { User } from './../entities/User';
+import { User } from "./../entities/User";
 
 // import { CheckAuth } from './../middleware/checkAuth';
 import { Context } from "./../types/Context";
@@ -11,11 +11,14 @@ import {
   Ctx,
   FieldResolver,
   ID,
+  Int,
   Mutation,
   Query,
   Resolver,
   Root,
 } from "type-graphql";
+import { PaginatedPosts } from "../types/PaginatedPosts";
+import { LessThan } from "typeorm";
 
 @Resolver((_of) => Post)
 export class PostResolver {
@@ -59,10 +62,43 @@ export class PostResolver {
     }
   }
 
-  @Query((_returns) => [Post])
+  @Query((_returns) => PaginatedPosts, { nullable: true })
   // @UseMiddleware(CheckAuth)
-  async posts(): Promise<Post[]> {
-    return Post.find();
+  async posts(
+    @Arg("limit", (_type) => Int) limit: number,
+    @Arg("cursor", { nullable: true }) cursor?: string
+  ): Promise<PaginatedPosts | null> {
+    try {
+      const totalPostCount = await Post.count();
+      const realLimit = Math.min(10, limit);
+
+      const findOptions: { [key: string]: any } = {
+        order: { createdAt: "DESC" },
+        take: realLimit,
+      };
+
+      let lastPost: Post[] = [];
+      if (cursor) {
+        findOptions.where = { createdAt: LessThan(cursor) };
+
+        lastPost = await Post.find({ order: { createdAt: "ASC" }, take: 1 });
+      }
+
+      const posts = await Post.find(findOptions);
+
+      return {
+        totalCount: totalPostCount,
+        cursor: posts[posts.length - 1].createdAt,
+        hasMore: cursor
+          ? posts[posts.length - 1].createdAt.toString() !==
+            lastPost[0].createdAt.toString()
+          : posts.length !== totalPostCount,
+        paginatedPosts: posts,
+      };
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
   }
 
   @Query((_returns) => Post, { nullable: true })
