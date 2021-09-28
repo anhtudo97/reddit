@@ -65,23 +65,23 @@ function createApolloClient(headers: IncomingHttpHeaders | null = null) {
           fields: {
             posts: {
               keyArgs: false,
-              // merge(existing, incoming) {
-              //   let paginatedPosts: Post[] = [];
+              merge(existing, incoming) {
+                let paginatedPosts: Post[] = [];
 
-              //   if (existing && existing.paginatedPosts) {
-              //     paginatedPosts = paginatedPosts.concat(
-              //       existing.paginatedPosts
-              //     );
-              //   }
+                if (existing && existing.paginatedPosts) {
+                  paginatedPosts = paginatedPosts.concat(
+                    existing.paginatedPosts
+                  );
+                }
 
-              //   if (incoming && incoming.paginatedPosts) {
-              //     paginatedPosts = paginatedPosts.concat(
-              //       incoming.paginatedPosts
-              //     );
-              //   }
+                if (incoming && incoming.paginatedPosts) {
+                  paginatedPosts = paginatedPosts.concat(
+                    incoming.paginatedPosts
+                  );
+                }
 
-              //   return { ...incoming, paginatedPosts };
-              // },
+                return { ...incoming, paginatedPosts };
+              },
             },
           },
         },

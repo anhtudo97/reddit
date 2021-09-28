@@ -14,24 +14,32 @@ import { Layout } from "../components/Layout";
 import { PostsDocument, usePostsQuery } from "../generated/graphql";
 import { addApolloState, initializeApollo } from "../lib/apolloClient";
 import { PostEditDeleteButtons } from "../components/PostEditDeleteButtons";
+import { NetworkStatus } from "@apollo/client";
 
 export const limit = 3;
 
 const Index = () => {
   const { data, loading, fetchMore, networkStatus } = usePostsQuery({
+    variables: { limit },
+
     // component nao render boi cai Posts query, se rerender khi networkStatus thay doi, tuc la fetchMore
     notifyOnNetworkStatusChange: true,
   });
 
+  const loadingMorePosts = networkStatus === NetworkStatus.fetchMore;
+
+  const loadMorePosts = () =>
+    fetchMore({ variables: { cursor: data?.posts?.cursor } });
+
   return (
     <Layout>
-      {loading ? (
+      {loading && !loadingMorePosts ? (
         <Flex justifyContent="center" alignItems="center" minH="100vh">
           <Spinner />
         </Flex>
       ) : (
         <Stack spacing={8}>
-          {data?.posts?.map((post) => (
+          {data?.posts?.paginatedPosts.map((post) => (
             <Flex key={post.id} p={5} shadow="md" borderWidth="1px">
               <Box flex={1}>
                 <NextLink href={`/post/${post.id}`}>
@@ -43,15 +51,25 @@ const Index = () => {
                 <Flex align="center">
                   <Text mt={4}>{post.textSnippet}</Text>
                   <Box ml="auto">
-                    <PostEditDeleteButtons
-                      postId={post.id}
-                      postUserId='1'
-                    />
+                    <PostEditDeleteButtons postId={post.id} postUserId="1" />
                   </Box>
                 </Flex>
               </Box>
             </Flex>
           ))}
+
+          {data?.posts?.hasMore && (
+            <Flex>
+              <Button
+                m="auto"
+                my={8}
+                isLoading={loadingMorePosts}
+                onClick={loadMorePosts}
+              >
+                {loadingMorePosts ? "Loading" : "Show more"}
+              </Button>
+            </Flex>
+          )}
         </Stack>
       )}
     </Layout>
