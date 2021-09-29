@@ -1,6 +1,6 @@
 import { User } from "./../entities/User";
 
-// import { CheckAuth } from './../middleware/checkAuth';
+import { CheckAuth } from "./../middleware/checkAuth";
 import { Context } from "./../types/Context";
 import { UpdatePostInput } from "./../types/UpdatePostInput";
 import { PostMutationResponse } from "./../types/PostMutationResponse";
@@ -16,6 +16,7 @@ import {
   Query,
   Resolver,
   Root,
+  UseMiddleware,
 } from "type-graphql";
 import { PaginatedPosts } from "../types/PaginatedPosts";
 import { LessThan } from "typeorm";
@@ -33,7 +34,7 @@ export class PostResolver {
   }
 
   @Mutation((_returns) => PostMutationResponse)
-  // @UseMiddleware(CheckAuth)
+  @UseMiddleware(CheckAuth)
   async createPost(
     @Arg("createPostInput") { title, text }: CreatePostInput,
     @Ctx() { req }: Context
@@ -63,7 +64,7 @@ export class PostResolver {
   }
 
   @Query((_returns) => PaginatedPosts, { nullable: true })
-  // @UseMiddleware(CheckAuth)
+  @UseMiddleware(CheckAuth)
   async posts(
     @Arg("limit", (_type) => Int) limit: number,
     @Arg("cursor", { nullable: true }) cursor?: string
@@ -102,7 +103,7 @@ export class PostResolver {
   }
 
   @Query((_returns) => Post, { nullable: true })
-  // @UseMiddleware(CheckAuth)
+  @UseMiddleware(CheckAuth)
   async post(@Arg("id", (_type) => ID) id: number): Promise<Post | undefined> {
     try {
       const post = await Post.findOne(id);
@@ -113,9 +114,10 @@ export class PostResolver {
   }
 
   @Mutation((_return) => PostMutationResponse)
-  // @UseMiddleware(CheckAuth)
+  @UseMiddleware(CheckAuth)
   async updatePost(
-    @Arg("updatePostInput") { id, title, text }: UpdatePostInput
+    @Arg("updatePostInput") { id, title, text }: UpdatePostInput,
+    @Ctx() { req }: Context
   ): Promise<PostMutationResponse> {
     const existingPost = await Post.findOne(id);
     if (!existingPost) {
@@ -126,10 +128,18 @@ export class PostResolver {
       };
     }
 
+    if (existingPost.userId !== req.session.userId) {
+      return {
+        code: 401,
+        success: false,
+        message: "Unauthorised",
+      };
+    }
+
     existingPost.title = title;
     existingPost.text = text;
 
-    existingPost.save();
+    await existingPost.save();
 
     return {
       code: 200,
@@ -140,12 +150,11 @@ export class PostResolver {
   }
 
   @Mutation((_return) => PostMutationResponse)
-  // @UseMiddleware(CheckAuth)
+  @UseMiddleware(CheckAuth)
   async deletePost(
     @Arg("id", (_type) => ID) id: number,
     @Ctx() { req }: Context
   ): Promise<PostMutationResponse> {
-    console.log("REQ", req.session);
     const existingPost = await Post.findOne(id);
     if (!existingPost) {
       return {
@@ -155,9 +164,9 @@ export class PostResolver {
       };
     }
 
-    // if (existingPost.userId !== req.session.userId) {
-    // 	return { code: 401, success: false, message: 'Unauthorised' }
-    // }
+    if (existingPost.userId !== req.session.userId) {
+    	return { code: 401, success: false, message: 'Unauthorised' }
+    }
 
     await Post.delete({ id });
 
