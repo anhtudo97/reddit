@@ -1,7 +1,15 @@
 import { sendEmail } from "./../utils/sendEmail";
 import { ForgotPasswordInput } from "./../types/ForgotPasswordInput";
 import argon2 from "argon2";
-import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  FieldResolver,
+  Mutation,
+  Query,
+  Resolver,
+  Root,
+} from "type-graphql";
 import { User } from "./../entities/User";
 import { validateRegisterInput } from "../utils/validateRegisterInput";
 import { LoginInput } from "../types/LoginInput";
@@ -13,8 +21,13 @@ import { v4 as uuidv4 } from "uuid";
 import { TokenModel } from "../models/Token";
 import { ChangePasswordInput } from "../types/ChangePasswordInput";
 
-@Resolver()
+@Resolver((_of) => User)
 export class UserResolver {
+  @FieldResolver((_returns) => String)
+  email(@Root() user: User, @Ctx() { req }: Context) {
+    return req.session.userId === user.id ? user.email : "";
+  }
+
   @Query((_returns) => User, { nullable: true })
   async me(@Ctx() { req }: Context): Promise<User | undefined | null> {
     if (!req.session.userId) return null;
@@ -164,7 +177,7 @@ export class UserResolver {
     await TokenModel.findOneAndDelete({ userId: `${user.id}` });
 
     const resetToken = uuidv4();
-    
+
     const hashedResetToken = await argon2.hash(resetToken);
 
     // save token to db

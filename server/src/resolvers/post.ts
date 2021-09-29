@@ -64,7 +64,6 @@ export class PostResolver {
   }
 
   @Query((_returns) => PaginatedPosts, { nullable: true })
-  @UseMiddleware(CheckAuth)
   async posts(
     @Arg("limit", (_type) => Int) limit: number,
     @Arg("cursor", { nullable: true }) cursor?: string
@@ -97,13 +96,11 @@ export class PostResolver {
         paginatedPosts: posts,
       };
     } catch (error) {
-      console.log(error);
       return null;
     }
   }
 
   @Query((_returns) => Post, { nullable: true })
-  @UseMiddleware(CheckAuth)
   async post(@Arg("id", (_type) => ID) id: number): Promise<Post | undefined> {
     try {
       const post = await Post.findOne(id);

@@ -1,3 +1,4 @@
+import { Reference } from "@apollo/client";
 import { Box, Flex, Heading, Link, Button } from "@chakra-ui/react";
 import NextLink from "next/link";
 import {
@@ -19,6 +20,18 @@ export const Navbar = () => {
             query: MeDocument,
             data: { me: null },
           });
+
+          // cache.modify({ 
+          //   fields: {
+          //     posts(existing){
+          //       existing.paginatedPosts.forEach((post: Reference) => {
+          //           cache.writeFragment({
+
+          //           })
+          //       })
+          //     }
+          //   }
+          // })
         }
       },
     });
