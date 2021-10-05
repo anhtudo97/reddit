@@ -13,7 +13,7 @@ export const Wrapper = ({ children, size }: IWrapperProps) => {
     <Box
       maxW={size === "regular" ? "800px" : "400px"}
       w="100%"
-      mt={8}
+      my={8}
       mx="auto"
     >
       {children}
