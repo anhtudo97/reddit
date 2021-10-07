@@ -51,7 +51,10 @@ const Index = () => {
                 <Flex align="center">
                   <Text mt={4}>{post.textSnippet}</Text>
                   <Box ml="auto">
-                    <PostEditDeleteButtons postId={post.id} postUserId="1" />
+                    <PostEditDeleteButtons
+                      postId={post.id}
+                      postUserId={post.user.id}
+                    />
                   </Box>
                 </Flex>
               </Box>

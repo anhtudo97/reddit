@@ -1,8 +1,15 @@
-import { Box, IconButton } from "@chakra-ui/react";
-import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
-import NextLink from "next/link";
-import { useDeletePostMutation, useMeQuery } from "../generated/graphql";
-import { useRouter } from "next/router";
+
+import NextLink from 'next/link'
+import { useRouter } from 'next/router'
+import { Reference } from '@apollo/client'
+import { Box, IconButton } from '@chakra-ui/react'
+import { DeleteIcon, EditIcon } from '@chakra-ui/icons'
+
+import {
+	PaginatedPosts,
+	useDeletePostMutation,
+	useMeQuery
+} from '../generated/graphql'
 
 interface PostEditDeleteButtonsProps {
   postId: string;
@@ -21,19 +28,36 @@ export const PostEditDeleteButtons: React.FC<PostEditDeleteButtonsProps> = ({
   const onPostDelete = async (postId: string) => {
     await deletePost({
       variables: { id: postId },
-      // update(cache, {data}){
-      //     if(data?.deletePost.success){
-      //         cache.modify({
+      update(cache, { data }) {
+        if (data?.deletePost.success) {
+          cache.modify({
+            fields: {
+              posts(
+                existing: Pick<
+                  PaginatedPosts,
+                  "__typename" | "cursor" | "hasMore" | "totalCount"
+                > & { paginatedPosts: Reference[] }
+              ) {
+                const newPostAfterDeleted = {
+                  ...existing,
+                  totalCount: existing.totalCount - 1,
+                  paginatedPosts: existing.paginatedPosts.filter(
+                    (postReference) => postReference.__ref !== `Post:${postId}`
+                  ),
+                };
 
-      //         })
-      //     }
-      // }
+                return newPostAfterDeleted;
+              },
+            },
+          });
+        }
+      },
     });
 
     if (router.route !== "/") router.push("/");
   };
 
-//   if (meData?.me?.id !== postUserId) return null;
+  if (meData?.me?.id !== postUserId) return null;
 
   return (
     <Box>
