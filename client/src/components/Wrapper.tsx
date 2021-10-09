@@ -8,7 +8,7 @@ interface IWrapperProps {
   size?: WrapperSize;
 }
 
-export const Wrapper = ({ children, size }: IWrapperProps) => {
+export const Wrapper: React.FC<IWrapperProps> = ({ children, size }) => {
   return (
     <Box
       maxW={size === "regular" ? "800px" : "400px"}
