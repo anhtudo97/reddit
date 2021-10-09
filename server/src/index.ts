@@ -19,16 +19,17 @@ import { Post } from "./entities/Post";
 import { HelloResolver } from "./resolvers/hello";
 import { UserResolver } from "./resolvers/user";
 import { PostResolver } from "./resolvers/post";
+import { Upvote } from "./entities/Upvote";
 
 const main = async () => {
-  await createConnection({
+  const connection = await createConnection({
     type: "postgres",
     database: "reddit",
     username: process.env.POSTGRES_USERNAME_DEV,
     password: process.env.POSTGRES_PASSWORD_DEV,
     logging: true,
     synchronize: true,
-    entities: [User, Post],
+    entities: [User, Post, Upvote],
   });
 
   const app = express();
@@ -74,6 +75,7 @@ const main = async () => {
     context: ({ req, res }): Context => ({
       req,
       res,
+      connection,
     }),
     plugins: [
       ApolloServerPluginLandingPageGraphQLPlayground({

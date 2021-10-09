@@ -1,4 +1,3 @@
-import { User } from "./User";
 import { Field, ID, ObjectType } from "type-graphql";
 import {
   Entity,
@@ -10,7 +9,9 @@ import {
   ManyToOne,
   OneToMany,
 } from "typeorm";
+import { User } from "./User";
 import { Upvote } from "./Upvote";
+
 @ObjectType()
 @Entity()
 export class Post extends BaseEntity {

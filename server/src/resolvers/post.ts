@@ -1,11 +1,3 @@
-import { User } from "./../entities/User";
-
-import { CheckAuth } from "./../middleware/checkAuth";
-import { Context } from "./../types/Context";
-import { UpdatePostInput } from "./../types/UpdatePostInput";
-import { PostMutationResponse } from "./../types/PostMutationResponse";
-import { CreatePostInput } from "../types/CreatePostInput";
-import { Post } from "./../entities/Post";
 import {
   Arg,
   Ctx,
@@ -14,12 +6,28 @@ import {
   Int,
   Mutation,
   Query,
+  registerEnumType,
   Resolver,
   Root,
   UseMiddleware,
 } from "type-graphql";
-import { PaginatedPosts } from "../types/PaginatedPosts";
 import { LessThan } from "typeorm";
+import { UserInputError } from "apollo-server-errors";
+
+import { User } from "./../entities/User";
+import { VoteType } from "./../types/VoteType";
+import { Post } from "./../entities/Post";
+import { Upvote } from "../entities/Upvote";
+import { Context } from "./../types/Context";
+import { CheckAuth } from "./../middleware/checkAuth";
+import { PaginatedPosts } from "../types/PaginatedPosts";
+import { CreatePostInput } from "../types/CreatePostInput";
+import { UpdatePostInput } from "./../types/UpdatePostInput";
+import { PostMutationResponse } from "./../types/PostMutationResponse";
+
+registerEnumType(VoteType, {
+  name: "VoteType", // this one is mandatory
+});
 
 @Resolver((_of) => Post)
 export class PostResolver {
@@ -162,7 +170,7 @@ export class PostResolver {
     }
 
     if (existingPost.userId !== req.session.userId) {
-    	return { code: 401, success: false, message: 'Unauthorised' }
+      return { code: 401, success: false, message: "Unauthorised" };
     }
 
     await Post.delete({ id });
@@ -172,5 +180,64 @@ export class PostResolver {
       success: true,
       message: "Post deleted successfully",
     };
+  }
+
+  @Mutation((_return) => PostMutationResponse)
+  @UseMiddleware(CheckAuth)
+  async vote(
+    @Arg("postId", (_type) => Int) postId: number,
+    @Arg("inputVoteValue", (_type) => VoteType) inputVoteValue: VoteType,
+    @Ctx()
+    {
+      req: {
+        session: { userId },
+      },
+      connection,
+    }: Context
+  ): Promise<PostMutationResponse> {
+    return await connection.transaction(async (transactionEntityManager) => {
+      // check if post exists
+      let post = await transactionEntityManager.findOne(Post, postId);
+      if (!post) {
+        throw new UserInputError("Post not found");
+      }
+
+      // check if user has voted or not
+      const existingVote = await transactionEntityManager.findOne(Upvote, {
+        postId,
+        userId,
+      });
+
+      if (existingVote && existingVote.value !== inputVoteValue) {
+        await transactionEntityManager.save(Upvote, {
+          ...existingVote,
+          value: inputVoteValue,
+        });
+
+        post = await transactionEntityManager.save(Post, {
+          ...post,
+          points: post.points + 2 * inputVoteValue,
+        });
+      }
+
+      if (!existingVote) {
+        const newVote = transactionEntityManager.create(Upvote, {
+          userId,
+          postId,
+          value: inputVoteValue,
+        });
+        await transactionEntityManager.save(newVote);
+
+        post.points = post.points + inputVoteValue;
+        post = await transactionEntityManager.save(post);
+      }
+
+      return {
+        code: 200,
+        success: true,
+        message: "Post voted",
+        post,
+      };
+    });
   }
 }
