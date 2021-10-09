@@ -4,8 +4,7 @@
         "dev": "next",
         "build": "next build",
         "start": "next start",
-        "codegen": "graphql-codegen --config codegen.yml",
-        "y": "graphql-codegen --config codegen.yml"
+        "codegen": "graphql-codegen --config codegen.yml"
     },
     "dependencies": {
         "@apollo/client": "^3.4.10",
@@ -17,11 +16,10 @@
         "formik": "^2.2.9",
         "framer-motion": "^4.0.3",
         "graphql": "^15.5.2",
+        "isomorphic-unfetch": "^3.1.0",
         "next": "latest",
-        "nodemailer": "^6.6.3",
         "react": "^17.0.2",
-        "react-dom": "^17.0.2",
-        "uuid": "^8.3.2"
+        "react-dom": "^17.0.2"
     },
     "devDependencies": {
         "@graphql-codegen/cli": "2.1.1",
