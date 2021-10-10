@@ -1,3 +1,4 @@
+import { buildDataLoaders } from './../utils/dataLoader';
 import { Request, Response } from "express";
 import { Session, SessionData } from "express-session";
 import { Connection } from "typeorm";
@@ -8,4 +9,5 @@ export type Context = {
   };
   res: Response;
   connection: Connection;
+  dataLoaders: ReturnType<typeof buildDataLoaders>;
 };

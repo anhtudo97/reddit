@@ -1,4 +1,4 @@
-import { Reference } from "@apollo/client";
+import { gql, Reference } from "@apollo/client";
 import { Box, Flex, Heading, Link, Button } from "@chakra-ui/react";
 import NextLink from "next/link";
 import {
@@ -21,17 +21,23 @@ export const Navbar = () => {
             data: { me: null },
           });
 
-          // cache.modify({ 
-          //   fields: {
-          //     posts(existing){
-          //       existing.paginatedPosts.forEach((post: Reference) => {
-          //           cache.writeFragment({
-
-          //           })
-          //       })
-          //     }
-          //   }
-          // })
+          cache.modify({
+            fields: {
+              posts(existing) {
+                existing.paginatedPosts.forEach((post: Reference) => {
+                  cache.writeFragment({
+                    id: post.__ref, // PostL: 17
+                    fragment: gql`
+                      fragment VoteType on Post {
+                        voteType
+                      }
+                    `,
+                    data: { voteType: 0 },
+                  });
+                });
+              },
+            },
+          });
         }
       },
     });

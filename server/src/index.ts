@@ -1,3 +1,4 @@
+import { buildDataLoaders } from './utils/dataLoader';
 require("dotenv").config();
 import "reflect-metadata";
 import express from "express";
@@ -76,6 +77,7 @@ const main = async () => {
       req,
       res,
       connection,
+      dataLoaders: buildDataLoaders()
     }),
     plugins: [
       ApolloServerPluginLandingPageGraphQLPlayground({
