@@ -43,6 +43,7 @@ export class PostResolver {
   ) {
     return await userLoader.load(root.userId);
   }
+
   @FieldResolver((_return) => Int)
   async voteType(
     @Root() root: Post,
